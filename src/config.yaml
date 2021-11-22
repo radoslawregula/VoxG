@@ -1,0 +1,1 @@
+sampling_rate: 44100
