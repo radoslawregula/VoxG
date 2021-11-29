@@ -1,1 +1,3 @@
-sampling_rate: 44100
+input_data: /workspaces/VoxG/data/raw
+processed_data: /workspacer/VoxG/data/processed 
+sampling_rate: 44100.0

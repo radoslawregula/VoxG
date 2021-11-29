@@ -3,6 +3,7 @@ from typing import Dict, List
 
 import librosa
 import numpy as np
+import scipy
 
 
 class RawDataPoint:
@@ -19,6 +20,7 @@ class DataOrganizer:
         self.organizer = []
     
     def search_data(self):
+        # TODO: why empty list here
         singers = list(filter(os.path.isdir, os.listdir(self.data_path)))
 
         for singer in singers:
@@ -48,7 +50,6 @@ class DataOrganizer:
 class DataProcessor:
     def __init__(self, config: Dict):
         self.sampling_rate = config['sampling_rate']
-        
 
     def preprocess(self, organizer: List[RawDataPoint]):
         """
@@ -57,3 +58,6 @@ class DataProcessor:
         for point in organizer:
             audio = librosa.load(point.wav, sr=self.sampling_rate, 
                                  mono=True, dtype=np.float64)
+            fourier = librosa.stft(audio, n_fft=1024, hop_length=256,
+                                   window=scipy.signal.windows.hann(1024))
+            fourier = np.abs(fourier)

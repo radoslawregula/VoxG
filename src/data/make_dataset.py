@@ -4,16 +4,25 @@ import logging
 from pathlib import Path
 from dotenv import find_dotenv, load_dotenv
 
+from src.data.datasets import DataOrganizer, DataProcessor
+from src.utils.config import read_config_section
+
 
 @click.command()
-@click.argument('input_filepath', type=click.Path(exists=True))
-@click.argument('output_filepath', type=click.Path())
-def main(input_filepath, output_filepath):
+@click.argument('config', type=str)
+def main(config: str):
     """ Runs data processing scripts to turn raw data from (../raw) into
         cleaned data ready to be analyzed (saved in ../processed).
     """
     logger = logging.getLogger(__name__)
-    logger.info('making final data set from raw data')
+    logger.info('Making final data set from raw data...')
+
+    cfg = read_config_section(config)
+    data_organizer = DataOrganizer(cfg['input_data'])
+    data_organizer.search_data()
+
+    data_processor = DataProcessor(cfg)
+    data_processor.preprocess(data_organizer.organizer)
 
 
 if __name__ == '__main__':
