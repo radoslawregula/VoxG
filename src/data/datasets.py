@@ -5,6 +5,8 @@ import librosa
 import numpy as np
 import scipy
 
+from src.data.features import signal_to_features
+
 
 class RawDataPoint:
     def __init__(self, txt: str, wav: str, id: str, is_sing: bool):
@@ -20,15 +22,17 @@ class DataOrganizer:
         self.organizer = []
     
     def search_data(self):
-        # TODO: why empty list here
-        singers = list(filter(os.path.isdir, os.listdir(self.data_path)))
+        data_path_contents = os.listdir(self.data_path)
+        data_path_contents = list(map(lambda x: os.path.join(self.data_path, x),
+                                      data_path_contents))
+        singers = list(filter(os.path.isdir, data_path_contents))
 
         for singer in singers:
             singer_path = os.path.join(self.data_path, singer)
             read = self._process_subfolder(singer_path, 'read')
             sing = self._process_subfolder(singer_path, 'sing')
 
-            self.organizer.append(read + sing)
+            self.organizer.extend(read + sing)
 
     @staticmethod
     def _process_subfolder(top_path, subpath) -> List[RawDataPoint]:
@@ -56,8 +60,9 @@ class DataProcessor:
         Runs the preprocessing procedures to transform raw data into HDF5 files. 
         """
         for point in organizer:
-            audio = librosa.load(point.wav, sr=self.sampling_rate, 
-                                 mono=True, dtype=np.float64)
+            audio, _ = librosa.load(point.wav, sr=self.sampling_rate, 
+                                    mono=True, dtype=np.float64)
             fourier = librosa.stft(audio, n_fft=1024, hop_length=256,
                                    window=scipy.signal.windows.hann(1024))
             fourier = np.abs(fourier)
+            features = signal_to_features(audio, sampling_rate=self.sampling_rate)
