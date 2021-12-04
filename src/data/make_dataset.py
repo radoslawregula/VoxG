@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-import click
 import logging
 from pathlib import Path
 from dotenv import find_dotenv, load_dotenv
+
+import click
 
 from src.data.datasets import DataOrganizer, DataProcessor
 from src.utils.config import read_config_section
@@ -26,8 +27,8 @@ def main(config: str):
 
 
 if __name__ == '__main__':
-    log_fmt = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logging.basicConfig(level=logging.INFO, format=log_fmt)
+    LOG_FMT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    logging.basicConfig(level=logging.INFO, format=LOG_FMT)
 
     # not used in this stub but often useful for finding various files
     project_dir = Path(__file__).resolve().parents[2]

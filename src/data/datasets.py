@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Dict, List
 
@@ -6,6 +7,9 @@ import numpy as np
 import scipy
 
 from src.data.features import signal_to_features
+
+
+logger = logging.getLogger(__name__)
 
 
 class RawDataPoint:
@@ -59,7 +63,8 @@ class DataProcessor:
         """
         Runs the preprocessing procedures to transform raw data into HDF5 files. 
         """
-        for point in organizer:
+        for num, point in enumerate(organizer):
+            logger.info(f'Processing file {num + 1}/{len(organizer)}...')
             audio, _ = librosa.load(point.wav, sr=self.sampling_rate, 
                                     mono=True, dtype=np.float64)
             fourier = librosa.stft(audio, n_fft=1024, hop_length=256,
