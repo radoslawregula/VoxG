@@ -1,3 +1,7 @@
 input_data: /workspaces/VoxG/data/raw
 processed_data: /workspacer/VoxG/data/processed 
-sampling_rate: 44100.0
+
+sampling:
+  sampling_rate: 44100.0
+  frame_len: 1024
+  hop_len: 256
