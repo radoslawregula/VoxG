@@ -79,11 +79,15 @@ class DataProcessor:
             fourier = librosa.stft(audio, n_fft=self.frame_len, 
                                    hop_length=self.hop_len,
                                    window=scipy.signal.windows.hann(self.frame_len))
-            fourier = np.abs(fourier)
+            fourier = np.abs(fourier).transpose()
 
             features = self.feats.signal_to_features(audio, 
                                                      sampling_rate=self.sampling_rate)
             phonemes = self.feats.process_phonemes_file(point.txt, 
                                                         sampling_rate=self.sampling_rate, 
                                                         subframe=self.hop_len)
+            fourier,features = self.feats.match_subframes(fourier, 
+                                                          features, 
+                                                          phonemes)
+            # TODO: save to h5df
             

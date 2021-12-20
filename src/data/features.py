@@ -1,5 +1,7 @@
 import copy
+import logging
 from math import ceil
+from typing import Tuple
 
 import librosa
 import numpy as np
@@ -9,6 +11,9 @@ import pyworld as pw
 
 from src.data.soundutils import frequency_to_pitch
 from src.utils.helpers import interpolate_inf
+
+
+logger = logging.getLogger(__name__)
 
 
 class Features:
@@ -96,6 +101,41 @@ class Features:
         )
 
         return phoneme_per_subframe
+    
+    @staticmethod
+    def crop(vector: np.ndarray, diff: int) -> np.ndarray:
+        if diff % 2 == 0:
+            to_crop = int(diff / 2)
+            return vector[to_crop:-to_crop]
+        else:
+            diff += 1
+            to_crop = int(diff / 2)
+            return vector[to_crop:-(to_crop - 1)]
+    
+    @staticmethod
+    def match_subframes(stft: np.ndarray, features: np.ndarray, 
+                        phonemes: np.ndarray) -> Tuple[np.ndarray]:
+        def _dim(vec: np.ndarray) -> int:
+            return vec.shape[0]
+        
+        diff_stft = _dim(stft) - _dim(phonemes)
+        diff_feats = _dim(features) - _dim(phonemes)
+
+        if not diff_feats == diff_stft:
+            logger.warning(f'Unexpected shape mismatch between STFT and feature'
+                            ' matrix. Will attempt to match anyway...')
+        stft = Features.crop(stft, diff_stft)
+        features = Features.crop(features, diff_feats)
+        
+        if len(set(map(_dim, [stft, features, phonemes]))) != 1:
+            logging.error("Subframe matching failed: unexpected "
+                          "data dimensions.")
+            raise SystemExit
+        
+        return stft, features
+            
+
+
         
 
 
