@@ -104,6 +104,8 @@ class Features:
     
     @staticmethod
     def crop(vector: np.ndarray, diff: int) -> np.ndarray:
+        if diff == 0:
+            return vector
         if diff % 2 == 0:
             to_crop = int(diff / 2)
             return vector[to_crop:-to_crop]
@@ -128,7 +130,7 @@ class Features:
         features = Features.crop(features, diff_feats)
         
         if len(set(map(_dim, [stft, features, phonemes]))) != 1:
-            logging.error("Subframe matching failed: unexpected "
+            logger.error("Subframe matching failed: unexpected "
                           "data dimensions.")
             raise SystemExit
         

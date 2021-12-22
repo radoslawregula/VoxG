@@ -1,5 +1,5 @@
-input_data: /workspaces/VoxG/data/raw
-processed_data: /workspacer/VoxG/data/processed 
+input_data: '/workspaces/VoxG/data/raw'
+processed_data: '/workspaces/VoxG/data/processed' 
 
 sampling:
   sampling_rate: 44100.0
