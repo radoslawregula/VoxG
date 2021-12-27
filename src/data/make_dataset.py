@@ -10,7 +10,7 @@ from src.utils.config import read_config_section
 
 
 @click.command()
-@click.argument('config', type=str)
+@click.option('-c', '--config', type=str)
 def main(config: str):
     """ Runs data processing scripts to turn raw data from (../raw) into
         cleaned data ready to be analyzed (saved in ../processed).

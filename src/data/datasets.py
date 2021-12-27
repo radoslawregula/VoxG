@@ -61,6 +61,10 @@ class DataOrganizer:
 
 
 class DataProcessor:
+    DSET_FEATS = 'features'
+    DSET_PHO = 'phonemes'
+    DSET_STFT = 'fourier'
+
     def __init__(self, config: Dict):
         config_sampling = config['sampling']
 
@@ -106,18 +110,19 @@ class DataProcessor:
             self.to_hdf5(hdf5_fpath, features, phonemes, fourier)
         
         logger.info(f'Preprocessed data saved to {self.output_path}.')
-        
-    def to_hdf5(self, hdf5_fpath: str, features_to_save: np.ndarray, 
+
+    @staticmethod    
+    def to_hdf5(hdf5_fpath: str, features_to_save: np.ndarray, 
                 phonemes_to_save: np.ndarray, fourier_to_save: np.ndarray):
         try:
             with h5py.File(hdf5_fpath, 'w') as h5file:
-                h5file.create_dataset(name='features', 
+                h5file.create_dataset(name=DataProcessor.DSET_FEATS, 
                                       shape=features_to_save.shape,
                                       data=features_to_save, dtype=np.float64)
-                h5file.create_dataset(name='phonemes', 
+                h5file.create_dataset(name=DataProcessor.DSET_PHO, 
                                       shape=phonemes_to_save.shape,
                                       data=phonemes_to_save, dtype=np.int16)
-                h5file.create_dataset(name='fourier', 
+                h5file.create_dataset(name=DataProcessor.DSET_STFT, 
                                       shape=fourier_to_save.shape,
                                       data=fourier_to_save, dtype=np.float64)
             
@@ -125,3 +130,19 @@ class DataProcessor:
         except Exception:
             logger.error(f'Error saving {os.path.basename(hdf5_fpath)}. Skipping...')
             return
+    
+    @staticmethod
+    def from_hdf5(hdf5_fpath: str):
+        if not os.path.isfile(hdf5_fpath):
+            raise FileNotFoundError(f"No HDF5 file to use at {hdf5_fpath}.")
+        try:
+            with h5py.File(hdf5_fpath, 'r') as h5file:
+                features_read = h5file.get(DataProcessor.DSET_FEATS).values
+                phonemes_read = h5file.get(DataProcessor.DSET_PHO).values
+                fourier_read = h5file.get(DataProcessor.DSET_STFT).values
+            logger.info(f'HDF5 read from {os.path.basename(hdf5_fpath)}.')
+        except Exception:
+            logger.error(f'Error reading from {os.path.basename(hdf5_fpath)}')
+            raise Exception
+        
+        return features_read, phonemes_read, fourier_read

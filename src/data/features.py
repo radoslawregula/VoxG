@@ -9,7 +9,7 @@ import pandas as pd
 import pysptk
 import pyworld as pw
 
-from src.data.soundutils import frequency_to_pitch
+from src.data.soundutils import frequency_to_pitch, pitch_to_frequency
 from src.utils.helpers import interpolate_inf
 
 
@@ -29,8 +29,8 @@ class Features:
     def dimensionality_reduce(spectral_input: np.ndarray, n_dim: int, alpha: float, 
                             noise_floor: float = -120.0) -> np.ndarray:
         mcep = np.apply_along_axis(pysptk.mcep, axis=1, arr=spectral_input, 
-                                order=n_dim-1, alpha=alpha, maxiter=0, etype=1,
-                                eps=10**(noise_floor/10), min_det=0.0, itype=1)
+                                   order=n_dim-1, alpha=alpha, maxiter=0, etype=1,
+                                   eps=10**(noise_floor/10), min_det=0.0, itype=1)
         # This part is taken directly from NPSS
         scale_mcep = copy.copy(mcep)
         scale_mcep[:, 0] *= 2
@@ -44,9 +44,9 @@ class Features:
                            frame_period_samples: int = 256) -> np.ndarray:
         frame_period = (frame_period_samples / sampling_rate) / 10**(-3)  # in miliseconds 
         f_zero, spectral_env, aperiod = pw.wav2world(signal,
-                                                    sampling_rate,
-                                                    fft_size=1024,
-                                                    frame_period=frame_period)
+                                                     sampling_rate,
+                                                     fft_size=1024,
+                                                     frame_period=frame_period)
         aperiod = librosa.amplitude_to_db(aperiod)
         spectral_env = librosa.power_to_db(spectral_env)
 
@@ -59,6 +59,14 @@ class Features:
         features = np.hstack((spectral_env, aperiod, f_zero, interpolation_mask))  
 
         return features
+    
+    def features_to_signal(self, features: np.ndarray):
+        spectral_env, aperiod, f_zero, interpolation_mask = np.hsplit(features, 
+                                                                      indices_or_sections=[60, 64, 66])
+        f_zero = pitch_to_frequency(f_zero)
+        # TODO: debug and check, finish method
+        
+        pass
 
     @staticmethod
     def _read_phoneme_file(txt_file: str) -> pd.DataFrame:
