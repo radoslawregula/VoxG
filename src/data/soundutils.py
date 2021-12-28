@@ -6,4 +6,4 @@ def frequency_to_pitch(frequency: float) -> float:
 
 
 def pitch_to_frequency(pitch: float) -> float:
-    return 440.0 * np.power(2, pitch - 69.0 / 12) 
+    return 440.0 * np.power(2, (pitch - 69.0) / 12) 

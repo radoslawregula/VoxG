@@ -75,7 +75,6 @@ class DataProcessor:
         self.feats = Features()
 
         self.output_path = config['processed_data']
-        pass
 
     def preprocess(self, organizer: List[RawDataPoint]):
         """
@@ -137,9 +136,9 @@ class DataProcessor:
             raise FileNotFoundError(f"No HDF5 file to use at {hdf5_fpath}.")
         try:
             with h5py.File(hdf5_fpath, 'r') as h5file:
-                features_read = h5file.get(DataProcessor.DSET_FEATS).values
-                phonemes_read = h5file.get(DataProcessor.DSET_PHO).values
-                fourier_read = h5file.get(DataProcessor.DSET_STFT).values
+                features_read = h5file.get(DataProcessor.DSET_FEATS)[()]
+                phonemes_read = h5file.get(DataProcessor.DSET_PHO)[()]
+                fourier_read = h5file.get(DataProcessor.DSET_STFT)[()]
             logger.info(f'HDF5 read from {os.path.basename(hdf5_fpath)}.')
         except Exception:
             logger.error(f'Error reading from {os.path.basename(hdf5_fpath)}')

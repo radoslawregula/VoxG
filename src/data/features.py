@@ -27,7 +27,7 @@ class Features:
 
     @staticmethod
     def dimensionality_reduce(spectral_input: np.ndarray, n_dim: int, alpha: float, 
-                            noise_floor: float = -120.0) -> np.ndarray:
+                              noise_floor: float = -120.0) -> np.ndarray:
         mcep = np.apply_along_axis(pysptk.mcep, axis=1, arr=spectral_input, 
                                    order=n_dim-1, alpha=alpha, maxiter=0, etype=1,
                                    eps=10**(noise_floor/10), min_det=0.0, itype=1)
@@ -39,6 +39,21 @@ class Features:
         mfsc = np.fft.rfft(mirror).real
 
         return mfsc
+    
+    @staticmethod
+    def dimensionality_decode(encoded_input: np.ndarray, n_dim: int, alpha: float, 
+                              fftlen: int = 2048) -> np.ndarray:
+        # This part is taken directly from NPSS
+        input_mirror = np.fft.irfft(encoded_input)
+        input_back = input_mirror[:, :n_dim]
+        input_back[:, 0] /= 2
+        input_back[:, -1] /= 2
+
+        spectral_output = np.exp(np.apply_along_axis(pysptk.mgc2sp, axis=1, 
+                                                     arr=input_back, alpha=alpha,
+                                                     fftlen=fftlen).real)
+
+        return spectral_output
 
     def signal_to_features(self, signal: np.ndarray, sampling_rate: float, 
                            frame_period_samples: int = 256) -> np.ndarray:
@@ -47,11 +62,12 @@ class Features:
                                                      sampling_rate,
                                                      fft_size=1024,
                                                      frame_period=frame_period)
-        aperiod = librosa.amplitude_to_db(aperiod)
-        spectral_env = librosa.power_to_db(spectral_env)
+        # spectral_env = librosa.power_to_db(spectral_env)
+        # aperiod = librosa.amplitude_to_db(aperiod)
 
         spectral_env = self.dimensionality_reduce(spectral_env, n_dim=60, alpha=0.45)
-        aperiod = self.dimensionality_reduce(aperiod, n_dim=4, alpha=0.45)
+        aperiod = pw.code_aperiodicity(aperiod, fs=sampling_rate)
+        # aperiod = self.dimensionality_reduce(aperiod, n_dim=4, alpha=0.45)
         
         with np.errstate(divide='ignore'):
             f_zero, interpolation_mask = interpolate_inf(frequency_to_pitch(f_zero)) 
@@ -60,13 +76,33 @@ class Features:
 
         return features
     
-    def features_to_signal(self, features: np.ndarray):
+    def features_to_signal(self, features: np.ndarray, sampling_rate: float, 
+                           frame_period_samples: int = 256) -> np.ndarray:
         spectral_env, aperiod, f_zero, interpolation_mask = np.hsplit(features, 
-                                                                      indices_or_sections=[60, 64, 66])
+                                                                      indices_or_sections=[60, 65, 66])
         f_zero = pitch_to_frequency(f_zero)
-        # TODO: debug and check, finish method
+        f_zero[interpolation_mask.astype(np.bool)] = 0.0
+        f_zero = f_zero.flatten()
+
+        max_spc = np.max(spectral_env)
+        min_spc = np.min(spectral_env)
+        max_f0 = np.max(f_zero)
+        min_f0 = np.min(f_zero)
+        max_apr = np.max(aperiod)
+        min_apr = np.min(aperiod)
         
-        pass
+        spectral_env = self.dimensionality_decode(spectral_env, n_dim=60, alpha=0.45)
+        # aperiod = self.dimenstionality_decode(aperiod, n_dim=4, alpha=0.45)
+        aperiod = pw.decode_aperiodicity(np.ascontiguousarray(aperiod), fs=sampling_rate, fft_size=2048)
+
+        # spectral_env = librosa.db_to_power(spectral_env)
+        # aperiod = librosa.db_to_amplitude(aperiod)
+
+        frame_period = (frame_period_samples / sampling_rate) / 10**(-3)  # in miliseconds
+        signal = pw.synthesize(f_zero, spectral_env, aperiod, fs=sampling_rate, 
+                               frame_period=frame_period)
+        
+        return signal
 
     @staticmethod
     def _read_phoneme_file(txt_file: str) -> pd.DataFrame:

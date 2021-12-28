@@ -1,5 +1,7 @@
 input_data: '/workspaces/VoxG/data/raw'
 processed_data: '/workspaces/VoxG/data/processed' 
+gt_data: '/workspaces/VoxG/data/ground_truth'
+generated_data: '/worskapces/VoxG/data/generated'
 
 sampling:
   sampling_rate: 44100.0

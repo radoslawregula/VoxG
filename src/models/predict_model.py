@@ -12,16 +12,16 @@ from src.utils.config import read_config_section
 @click.command()
 @click.option('-c', '--config', type=str)
 @click.option('-f', '--file', type=str)
-@click.option('-gt', '--ground-truth', is_flag=True)
-def main(config: str, file: str, ground_truth: bool):
+@click.option('-skp', '--skip-prediction', is_flag=True)
+def main(config: str, file: str, skip_prediction: bool):
     logger = logging.getLogger(__name__)
     logger.info('Running inference...')
-    if ground_truth:
-        logger.info('Generating ground truth - skipping model prediction.')
+    if skip_prediction:
+        logger.info('Generating ground truth, skipping model prediction.')
 
     cfg = read_config_section(config)
     infer = Inference(cfg)
-    infer.get(file, ground_truth)
+    infer.get(file, skip_prediction)
 
 
 if __name__ == '__main__':
