@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import h5py
 import librosa
@@ -131,7 +131,7 @@ class DataProcessor:
             return
     
     @staticmethod
-    def from_hdf5(hdf5_fpath: str):
+    def from_hdf5(hdf5_fpath: str) -> Tuple[np.ndarray]:
         if not os.path.isfile(hdf5_fpath):
             raise FileNotFoundError(f"No HDF5 file to use at {hdf5_fpath}.")
         try:
