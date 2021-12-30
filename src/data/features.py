@@ -38,36 +38,43 @@ class Features:
         mirror = np.hstack([scale_mcep[:, :-1], scale_mcep[:, -1:0:-1]])
         mfsc = np.fft.rfft(mirror).real
 
+        mfsc = (10 / np.log(10)) * mfsc  # but this is a linear transformation??
+
         return mfsc
     
     @staticmethod
     def dimensionality_decode(encoded_input: np.ndarray, n_dim: int, alpha: float, 
                               fftlen: int = 2048) -> np.ndarray:
+        encoded_input = (np.log(10) / 10) * encoded_input
+
         # This part is taken directly from NPSS
         input_mirror = np.fft.irfft(encoded_input)
+        # input_mirror = np.hstack([encoded_input[:, :], encoded_input[:, -2:0:-1]])
+        # input_back = np.fft.ifft(input_mirror)
         input_back = input_mirror[:, :n_dim]
         input_back[:, 0] /= 2
         input_back[:, -1] /= 2
 
-        spectral_output = np.exp(np.apply_along_axis(pysptk.mgc2sp, axis=1, 
-                                                     arr=input_back, alpha=alpha,
-                                                     fftlen=fftlen).real)
+        spectral_output = np.apply_along_axis(pysptk.mgc2sp, axis=1, arr=input_back, 
+                                              alpha=alpha, fftlen=fftlen)
+        spectral_output = (20.0 / np.log(10)) * np.real(spectral_output)
 
         return spectral_output
 
     def signal_to_features(self, signal: np.ndarray, sampling_rate: float, 
                            frame_period_samples: int = 256) -> np.ndarray:
-        frame_period = (frame_period_samples / sampling_rate) / 10**(-3)  # in miliseconds 
+        # in miliseconds
+        frame_period = (frame_period_samples / sampling_rate) / 10**(-3)   
         f_zero, spectral_env, aperiod = pw.wav2world(signal,
                                                      sampling_rate,
-                                                     fft_size=1024,
+                                                    #  fft_size=1024,
                                                      frame_period=frame_period)
-        # spectral_env = librosa.power_to_db(spectral_env)
-        # aperiod = librosa.amplitude_to_db(aperiod)
+        spectral_env = librosa.power_to_db(spectral_env, amin=1e-30, top_db=None)
+        aperiod = librosa.amplitude_to_db(aperiod, amin=1e-30, top_db=None)
 
         spectral_env = self.dimensionality_reduce(spectral_env, n_dim=60, alpha=0.45)
-        aperiod = pw.code_aperiodicity(aperiod, fs=sampling_rate)
-        # aperiod = self.dimensionality_reduce(aperiod, n_dim=4, alpha=0.45)
+        # aperiod = pw.code_aperiodicity(aperiod, fs=sampling_rate)
+        aperiod = self.dimensionality_reduce(aperiod, n_dim=4, alpha=0.45)
         
         with np.errstate(divide='ignore'):
             f_zero, interpolation_mask = interpolate_inf(frequency_to_pitch(f_zero)) 
@@ -79,24 +86,17 @@ class Features:
     def features_to_signal(self, features: np.ndarray, sampling_rate: float, 
                            frame_period_samples: int = 256) -> np.ndarray:
         spectral_env, aperiod, f_zero, interpolation_mask = np.hsplit(features, 
-                                                                      indices_or_sections=[60, 65, 66])
+                                                                      indices_or_sections=[60, 64, 65])
         f_zero = pitch_to_frequency(f_zero)
         f_zero[interpolation_mask.astype(np.bool)] = 0.0
         f_zero = f_zero.flatten()
-
-        max_spc = np.max(spectral_env)
-        min_spc = np.min(spectral_env)
-        max_f0 = np.max(f_zero)
-        min_f0 = np.min(f_zero)
-        max_apr = np.max(aperiod)
-        min_apr = np.min(aperiod)
         
         spectral_env = self.dimensionality_decode(spectral_env, n_dim=60, alpha=0.45)
-        # aperiod = self.dimenstionality_decode(aperiod, n_dim=4, alpha=0.45)
-        aperiod = pw.decode_aperiodicity(np.ascontiguousarray(aperiod), fs=sampling_rate, fft_size=2048)
+        aperiod = self.dimensionality_decode(aperiod, n_dim=4, alpha=0.45)
+        # aperiod = pw.decode_aperiodicity(np.ascontiguousarray(aperiod), fs=sampling_rate, fft_size=2048)
 
-        # spectral_env = librosa.db_to_power(spectral_env)
-        # aperiod = librosa.db_to_amplitude(aperiod)
+        spectral_env = librosa.db_to_power(spectral_env)
+        aperiod = librosa.db_to_amplitude(aperiod)
 
         frame_period = (frame_period_samples / sampling_rate) / 10**(-3)  # in miliseconds
         signal = pw.synthesize(f_zero, spectral_env, aperiod, fs=sampling_rate, 

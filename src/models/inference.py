@@ -57,6 +57,7 @@ class Inference:
     def save_to_wav(self, signal: np.ndarray, filepath: str):
         try:
             sf.write(file=filepath, data=signal, samplerate=int(self.sampling_rate))
+            logging.info(f'Saved to file {os.path.basename(filepath)}.')
         except Exception as exc:
             logger.error(f'Error saving to file: {filepath}')
             raise exc
