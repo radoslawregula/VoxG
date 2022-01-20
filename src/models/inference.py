@@ -48,7 +48,6 @@ class Inference:
         self.save_to_wav(signal=signal_gt, 
                          filepath=self._generate_ground_truth_wav_path(file_path))
 
-    
     def _generate_ground_truth_wav_path(self, file_path: str) -> str:
         filename = os.path.basename(file_path).replace('processed', 'ground-truth') \
                                               .replace('hdf5', 'wav')

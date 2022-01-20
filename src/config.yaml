@@ -1,4 +1,5 @@
 input_data: '/workspaces/VoxG/data/raw'
+normalization_data: '/workspaces/VoxG/data/normalization'
 processed_data: '/workspaces/VoxG/data/processed' 
 gt_data: '/workspaces/VoxG/data/ground_truth'
 generated_data: '/worskapces/VoxG/data/generated'
