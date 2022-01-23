@@ -1,8 +1,9 @@
 import glob
-import os
-
 import h5py
 import logging
+import os
+from typing import Union
+
 import numpy as np
 
 from src.data.datasets import DataProcessor
@@ -30,8 +31,15 @@ class Normalizer:
                                               min_higher_bound=1000.0)
 
     @staticmethod
-    def simple_normalize(signal: np.ndarray, s_min: np.ndarray, 
-                         s_max: np.ndarray) -> np.ndarray:
+    def assert_within_bounds(data: np.ndarray, upper: float = 1.0, 
+                             lower: float = 0.0, filename: str = None):
+        for_string = f'for {filename}' if filename is not None else ''
+        assert (np.amin(data) >= lower) & (np.amax(data) <= upper), \
+            f'Normalization error: data is out of bounds {for_string}'
+    
+    @staticmethod
+    def simple_normalize(signal: np.ndarray, s_min: Union[np.ndarray, float], 
+                         s_max: Union[np.ndarray, float]) -> np.ndarray:
         return (signal - s_min) / (s_max - s_min)
 
     @staticmethod
@@ -42,9 +50,19 @@ class Normalizer:
         return f_zero
     
     def normalize_f_zero(self, f_zero: np.ndarray) -> np.ndarray:
-        # TODO: s_min, s_max
-        return self.simple_normalize(self.imput_f_zero(f_zero), s_min=None, s_max=None)
+        return self.simple_normalize(self.imput_f_zero(f_zero), 
+                                     s_min=self.features_min[-2],
+                                     s_max=self.features_max[-2])
     
+    def normalize(self, raw_features: np.ndarray) -> np.ndarray:
+        _f0 = self.normalize_f_zero(raw_features[:, -2])
+        normalized_feats = self.simple_normalize(raw_features, 
+                                                 s_min=self.features_min,
+                                                 s_max=self.features_max)
+        normalized_feats[:, -2] = _f0
+
+        return normalized_feats
+
     def calculate_normalization_data(self, max_lower_bound: float = None,
                                      min_higher_bound: float = None):
         iterfiles = glob.glob(os.path.join(self.processed_path, '*-processed.hdf5'))
@@ -101,6 +119,6 @@ class Normalizer:
                 self.features_max = h5file.get(Normalizer.DSET_MAX)[()]
                 self.features_min = h5file.get(Normalizer.DSET_MIN)[()]
             logger.info(f'Normalization HDF5 read from {os.path.basename(self.hdf5_fpath)}.')
-        except Exception:
+        except Exception as e:
             logger.error(f'Error reading from {os.path.basename(self.hdf5_fpath)}')
-            raise Exception
+            raise e

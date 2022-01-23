@@ -140,8 +140,8 @@ class DataProcessor:
                 phonemes_read = h5file.get(DataProcessor.DSET_PHO)[()]
                 fourier_read = h5file.get(DataProcessor.DSET_STFT)[()]
             logger.info(f'HDF5 read from {os.path.basename(hdf5_fpath)}.')
-        except Exception:
+        except Exception as e:
             logger.error(f'Error reading from {os.path.basename(hdf5_fpath)}')
-            raise Exception
+            raise e
         
         return features_read, phonemes_read, fourier_read

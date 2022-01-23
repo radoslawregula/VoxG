@@ -10,6 +10,7 @@ import pysptk
 import pyworld as pw
 
 from src.data.soundutils import frequency_to_pitch, pitch_to_frequency
+from src.utils.constants import IndexableConstants as idc
 from src.utils.helpers import interpolate_inf
 
 
@@ -21,9 +22,6 @@ class Features:
     COL_T_END = 't_end'
     COL_PHONEME = 'phoneme'
     COL_REPEATS = 'repeats'
-
-    def __init__(self):
-        self.phonemes = []
 
     @staticmethod
     def dimensionality_reduce(spectral_input: np.ndarray, n_dim: int, alpha: float, 
@@ -109,10 +107,29 @@ class Features:
     def _seconds_to_subframe_idx(sec: float, sr: float, subframe: int) -> int:
         return ceil((sec * sr) / subframe)
     
-    # TODO: inspect why that func is used
+    def _match_phoneme_to_index(self, phoneme: str) -> int:
+        if phoneme in idc.PHONEMES:
+            return idc.PHONEMES.index(phoneme)
+        else:
+            raise RuntimeError(f'Phoneme {phoneme} is not mapped in the static ' \
+                               f'mapping structure. Add mapping to proceed.')
+    
+    # SIL = BR = PAU = no sound!
     @staticmethod
     def _substitute(phoneme: str) -> str:
         return 'Sil' if phoneme in ('sil', 'br', 'pau') else phoneme
+    
+    def _verify_monotonic_increase(self, data: pd.DataFrame) -> pd.DataFrame:
+        for idx, row in data.iterrows():
+            if idx == 0:
+                previous_row = row
+            else:
+                if previous_row[self.COL_T_END] > row[self.COL_T_START]:
+                    row[self.COL_T_START] = previous_row[self.COL_T_END]
+                    data.iloc[idx] = row
+                previous_row = row
+        
+        return data
 
     def process_phonemes_file(self, txt_file: str, sampling_rate: float, 
                               subframe: int = 256) -> np.ndarray:
@@ -123,17 +140,11 @@ class Features:
                                           sr=sampling_rate, 
                                           subframe=subframe)
         ))
+        df = self._verify_monotonic_increase(df)
         df[self.COL_PHONEME] = df[self.COL_PHONEME].apply(self._substitute)
-        phonemes_here = df[self.COL_PHONEME].unique().tolist()
-
-        if not self.phonemes:
-            self.phonemes.extend(phonemes_here)
-        else:
-            self.phonemes.extend([pho for pho in phonemes_here 
-                                  if pho not in self.phonemes])
-        
-        df[self.COL_PHONEME] = df[self.COL_PHONEME].apply(self.phonemes.index)
+        df[self.COL_PHONEME] = df[self.COL_PHONEME].apply(self._match_phoneme_to_index)
         df[self.COL_REPEATS] = df[self.COL_T_END].sub(df[self.COL_T_START])
+        df[self.COL_REPEATS] = df[self.COL_REPEATS].apply(lambda x: x if x >= 0 else 0)
 
         phoneme_per_subframe = np.concatenate(
             [np.repeat(row[self.COL_PHONEME], 
@@ -152,7 +163,10 @@ class Features:
         else:
             diff += 1
             to_crop = int(diff / 2)
-            return vector[to_crop:-(to_crop - 1)]
+            if to_crop > 1:
+                return vector[to_crop:-(to_crop - 1)]
+            else:
+                return vector[to_crop:]
     
     @staticmethod
     def match_subframes(stft: np.ndarray, features: np.ndarray, 
@@ -170,16 +184,8 @@ class Features:
         features = Features.crop(features, diff_feats)
         
         if len(set(map(_dim, [stft, features, phonemes]))) != 1:
-            logger.error("Subframe matching failed: unexpected "
-                          "data dimensions.")
+            logger.error('Subframe matching failed: unexpected '
+                         'data dimensions.')
             raise SystemExit
         
         return stft, features
-    
-            
-
-
-        
-
-
-    

@@ -3,8 +3,19 @@ normalization_data: '/workspaces/VoxG/data/normalization'
 processed_data: '/workspaces/VoxG/data/processed' 
 gt_data: '/workspaces/VoxG/data/ground_truth'
 generated_data: '/worskapces/VoxG/data/generated'
+splits: '/workspaces/VoxG/data/splits'
+
+data:
+  split_id: 0
 
 sampling:
   sampling_rate: 44100.0
   frame_len: 1024
   hop_len: 256
+
+training:
+  batch_size: 30
+  per_epoch: 100
+  per_epoch_valid: 10
+  blocks_per_file: 6
+  block_len: 128
