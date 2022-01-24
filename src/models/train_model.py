@@ -4,6 +4,7 @@ from pathlib import Path
 from dotenv import find_dotenv, load_dotenv
 
 import click
+import tensorflow as tf
 
 from src.data.normalizer import Normalizer
 from src.data.splits import Split
@@ -22,6 +23,7 @@ def _prepare_data_feeder(cfg: dict) -> DataFeeder:
 @click.option('-c', '--config', type=str)
 def main(config: str):
     logger = logging.getLogger(__name__)
+    logger.info(f'Tensorflow version: {tf.__version__}')
     logger.info('Initializing training...')
 
     cfg = read_config_section(config)

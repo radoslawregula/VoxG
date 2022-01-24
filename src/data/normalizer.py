@@ -68,7 +68,7 @@ class Normalizer:
                                      min_higher_bound: float = None):
         iterfiles = glob.glob(os.path.join(self.processed_path, '*-processed.hdf5'))
         # Why is that used?
-        iterfiles = list(filter(lambda x: 'KENN' not in x, iterfiles))
+        # iterfiles = list(filter(lambda x: 'KENN' not in x, iterfiles))
         max_values = []
         min_values = []
         
