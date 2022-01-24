@@ -27,6 +27,7 @@ class Normalizer:
         if os.path.isfile(self.hdf5_fpath):
             self.normalizer_data_from_hdf5()
         else:
+            logger.info('Normalization data is not found. Calculating...')
             self.calculate_normalization_data(max_lower_bound=0.0,
                                               min_higher_bound=1000.0)
 

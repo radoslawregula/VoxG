@@ -50,13 +50,13 @@ class Split:
         self.id = int(cfg['data']['split_id'])
 
         self.train_dataset: SplitDataset = None
-        self.valid_datasets: List[SplitDataset] = None
+        self.valid_datasets: List[SplitDataset] = []
 
         self.read_split()
     
     def read_split(self):
         split_path = self._search_for_split_id()
-        split_json = os.path.join(split_path, f'split-{self.id}.json')
+        split_json = os.path.join(split_path, f'split_{self.id}.json')
 
         if not os.path.isfile(split_json):
             raise ValueError(f'No split definition JSON file at {split_json}.')
@@ -88,7 +88,7 @@ class Split:
 
 
     def _search_for_split_id(self) -> str:
-        existing_splits = glob.glob(self.splits_top_path)
+        existing_splits = glob.glob(os.path.join(self.splits_top_path, 'split_*'))
         matched = list(filter(
             lambda x: int(os.path.basename(x).split('_')[1]) == self.id,
             existing_splits
@@ -106,8 +106,8 @@ class Split:
         valid_subsets = list(filter(lambda x: x['type'] in DatasetTypes.LEGAL_TYPES,
                                     data['subsets']))
         # More than 2 subsets, one train and one valid necessary
-        assert valid_subsets >= 2, 'Split needs to consist of ' \
-                                   'at least two datasets.'
+        assert len(valid_subsets) >= 2, 'Split needs to consist of ' \
+                                        'at least two datasets.'
         # Only one train dataset (merging can be added)
         assert sum([ds['type'] == DatasetTypes.TRAIN for ds in valid_subsets]) == 1, \
             'Merging training datasets is currently not supported. ' \
