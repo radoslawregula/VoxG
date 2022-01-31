@@ -19,3 +19,9 @@ training:
   per_epoch_valid: 10
   blocks_per_file: 6
   block_len: 128
+
+  filter_length: 5
+  num_features: 64
+
+  activation: 'relu'
+  dropout: 0.0

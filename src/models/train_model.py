@@ -9,6 +9,7 @@ import tensorflow as tf
 from src.data.normalizer import Normalizer
 from src.data.splits import Split
 from src.models.data_feeder import DataFeeder
+from src.models.generator import Generator
 from src.utils.config import read_config_section
 
 
@@ -28,6 +29,10 @@ def main(config: str):
 
     cfg = read_config_section(config)
     feeder = _prepare_data_feeder(cfg)
+
+    generator = Generator(cfg['training'])
+    generator.build(input_shape=(128, 64))
+    generator.summary()
 
 
 if __name__ == '__main__':
