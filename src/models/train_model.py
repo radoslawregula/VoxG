@@ -30,9 +30,11 @@ def main(config: str):
     cfg = read_config_section(config)
     feeder = _prepare_data_feeder(cfg)
 
+    for x in feeder.train_data_generator():
+        pass
+
     generator = Generator(cfg['training'])
-    generator.build(input_shape=(128, 64))
-    generator.summary()
+    # generator.summary()
 
 
 if __name__ == '__main__':
