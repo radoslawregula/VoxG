@@ -9,4 +9,7 @@ class IndexableConstants:
         'ADIZ', 'JLEE', 'JTAN', 'KENN', 'MCUR', 'MPOL', 
         'MPUR', 'NJAT', 'PMAR', 'SAMF', 'VKOW' ,'ZHIY'
     ]
+
+    N_PHONEMES = len(PHONEMES)
+    N_SINGERS = len(SINGERS)
     
