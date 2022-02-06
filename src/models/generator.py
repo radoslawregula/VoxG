@@ -13,7 +13,7 @@ class Generator(Model):
         filters_encoder = filter_nums[1:]
         filters_decoder = list(reversed(filter_nums))[1:]
 
-        activation = config['activation']
+        activation = config['activation_generator']
         filter_size = (config['filter_length'], 1)
         dropout_rate = config['dropout']
         n_features = config['num_features']
@@ -24,7 +24,7 @@ class Generator(Model):
         initializer = tf.keras.initializers.RandomNormal(stddev=0.02)
         strides = (2, 1)
 
-        self.input_layer = GeneratorInput(n_features, initializer, batch_size, block_len)
+        self.input_layer = NetworkInput(n_features, initializer, batch_size, block_len)
         for num in filters_encoder:
             self.encoders.append(EncoderBlock(num, filter_size, strides, 
                                               activation, initializer, dropout_rate))
@@ -60,9 +60,10 @@ class Generator(Model):
         return model.summary()
 
 
-class GeneratorInput(layers.Layer):
-    def __init__(self, n_features, initializer, batch_size, block_len):
-        super(GeneratorInput, self).__init__()
+class NetworkInput(layers.Layer):
+    def __init__(self, n_features, initializer, batch_size, 
+                 block_len, input_multiplier = 1.0):
+        super(NetworkInput, self).__init__()
         self.adjust_batch = batch_size
         self.adjust_block = block_len
         self.input_layers = {
@@ -80,10 +81,11 @@ class GeneratorInput(layers.Layer):
             ],
 
         }
-        self.concatenated_layer = layers.Dense(n_features, kernel_initializer=initializer, 
+        self.concatenated_layer = layers.Dense(n_features * input_multiplier, 
+                                               kernel_initializer=initializer, 
                                                name='input_concat')
 
-    def call(self, f0, phonemes, singers, training = False):
+    def call(self, f0, phonemes, singers, training = False, features = None):
         def _input_call(feature, key):
             feature = self.input_layers[key][0](feature)
             feature = self.input_layers[key][1](feature, training=training)
@@ -99,8 +101,12 @@ class GeneratorInput(layers.Layer):
             [1, self.adjust_block, 1]
         )
 
-        concatenated = tf.concat([_f0, _phonemes, _singers], axis=-1)  # pylint: disable=no-value-for-parameter,unexpected-keyword-arg
-        # Specify shape explicitly to debug with summary()
+        to_concat = [_f0, _phonemes, _singers]
+        if features is not None:
+            to_concat.insert(0, features)
+
+        concatenated = tf.concat(to_concat, axis=-1)  # pylint: disable=no-value-for-parameter,unexpected-keyword-arg
+        # Specify shape explicitly to debug with summary() - 192 for generator, 256 for critic
         concatenated = tf.reshape(concatenated, [self.adjust_batch, 
                                                  self.adjust_block, 1, -1])
         

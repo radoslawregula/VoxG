@@ -8,6 +8,7 @@ import tensorflow as tf
 
 from src.data.normalizer import Normalizer
 from src.data.splits import Split
+from src.models.critic import Critic
 from src.models.data_feeder import DataFeeder
 from src.models.generator import Generator
 from src.utils.config import read_config_section
@@ -31,7 +32,9 @@ def main(config: str):
     feeder = _prepare_data_feeder(cfg)
 
     generator = Generator(cfg['training'])
-    # generator.summary()
+    critic = Critic(cfg['training'])
+    generator.summary()
+    # critic.summary()
 
 
 if __name__ == '__main__':

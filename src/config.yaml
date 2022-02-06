@@ -23,5 +23,6 @@ training:
   filter_length: 5
   num_features: 64
 
-  activation: 'relu'
+  activation_generator: 'relu'
+  activation_critic: 'leaky_relu'
   dropout: 0.0
