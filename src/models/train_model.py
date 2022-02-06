@@ -11,6 +11,7 @@ from src.data.splits import Split
 from src.models.critic import Critic
 from src.models.data_feeder import DataFeeder
 from src.models.generator import Generator
+from src.models.model_engine import ModelEngine
 from src.utils.config import read_config_section
 
 
@@ -31,10 +32,8 @@ def main(config: str):
     cfg = read_config_section(config)
     feeder = _prepare_data_feeder(cfg)
 
-    generator = Generator(cfg['training'])
-    critic = Critic(cfg['training'])
-    generator.summary()
-    # critic.summary()
+    engine = ModelEngine(cfg['training'], feeder)
+    
 
 
 if __name__ == '__main__':

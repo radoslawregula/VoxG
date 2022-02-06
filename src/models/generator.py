@@ -116,10 +116,11 @@ class NetworkInput(layers.Layer):
 
 class EncoderBlock(layers.Layer):
     def __init__(self, num_filters, filter_size, strides, 
-                 activation, initializer, dropout):
+                 activation, initializer, dropout, constraint=None):
         super(EncoderBlock, self).__init__()
-        self.conv_1 = layers.Conv2D(num_filters, filter_size, strides, padding='same',
-                                    kernel_initializer=initializer, name='conv_1')
+        self.conv_1 = layers.Conv2D(num_filters, filter_size, strides, 
+                                    padding='same', kernel_initializer=initializer, 
+                                    kernel_constraint=constraint, name='conv_1')
         self.dropout_1 = layers.Dropout(rate=dropout, name='dropout_1')
         self.activation_1 = layers.Activation(activation=activation, name='activation_1')
         self.batch_norm_1 = layers.BatchNormalization(scale=False, name='batch_norm_1')

@@ -25,4 +25,8 @@ training:
 
   activation_generator: 'relu'
   activation_critic: 'leaky_relu'
+  optimizer: 'rmsprop'
+
+  reconstruction_loss_lambda: 0.001
+  learning_rate: 0.00005
   dropout: 0.0

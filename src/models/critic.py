@@ -1,7 +1,16 @@
 import tensorflow as tf
 from tensorflow.keras import layers, Model, Input
+from tensorflow.keras.constraints import Constraint # pylint: disable=all
 
 from src.models.generator import NetworkInput, EncoderBlock
+
+
+class ClipConstraint(Constraint):
+	def __init__(self, clip_to_value):
+		self.clip_to_value = clip_to_value
+ 
+	def __call__(self, weights):
+		return tf.clip_by_value(weights, -self.clip_value, self.clip_value)
 
 
 class Critic(Model):
@@ -21,6 +30,7 @@ class Critic(Model):
         block_len = config['block_len']
 
         initializer = tf.keras.initializers.RandomNormal(stddev=0.02)
+        constraint = ClipConstraint(0.01)
         strides = (2, 1)
 
         self.input_layer = NetworkInput(n_features, initializer,
@@ -29,7 +39,8 @@ class Critic(Model):
         for num in filters_critic:
             self.layers_critic.append(EncoderBlock(num, filter_size, strides, 
                                                    activation, initializer, 
-                                                   dropout_rate))
+                                                   dropout_rate, constraint=constraint))
+        # Linear activation
         self.output_layer = layers.Dense(1, kernel_initializer=initializer)
 
     def call(self, features, f0, phonemes, singers, training = False):
