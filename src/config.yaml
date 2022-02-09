@@ -17,6 +17,8 @@ training:
   batch_size: 30
   per_epoch: 100
   per_epoch_valid: 10
+  epochs: 950
+  critic_inloops: 5
   blocks_per_file: 6
   block_len: 128
 

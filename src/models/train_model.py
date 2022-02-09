@@ -33,8 +33,8 @@ def main(config: str):
     feeder = _prepare_data_feeder(cfg)
 
     engine = ModelEngine(cfg['training'], feeder)
+    engine.train()
     
-
 
 if __name__ == '__main__':
     LOG_FMT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

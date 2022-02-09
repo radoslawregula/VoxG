@@ -47,7 +47,7 @@ class Generator(Model):
             x = decoder(x, to_concat_list[-(num + 2)], training=training)
         output = self.output_layer(x)
 
-        return output
+        return tf.squeeze(output)
     
     def summary(self):
         # For debugging

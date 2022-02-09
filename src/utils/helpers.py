@@ -1,6 +1,7 @@
-from typing import Tuple
+from typing import Tuple, Union
 
 import numpy as np
+from tensorflow import Tensor
 
 
 def interpolate_inf(vector: np.ndarray) -> Tuple[np.ndarray]:
@@ -11,3 +12,11 @@ def interpolate_inf(vector: np.ndarray) -> Tuple[np.ndarray]:
     vector[inf_mask] = interpolations
 
     return vector.reshape(-1, 1), inf_mask.reshape(-1, 1)
+
+
+def to_wider_limits(matrix: Tensor) -> Tensor:
+    return (matrix - 0.5) / 2
+
+
+def to_narrow_limits(matrix: Tensor) -> Tensor:
+    return (matrix * 2) + 0.5

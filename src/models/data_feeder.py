@@ -3,6 +3,7 @@ import random
 from typing import List
 
 import numpy as np
+import tensorflow as tf
 
 from src.data.datasets import DataProcessor
 from src.data.normalizer import Normalizer
@@ -102,4 +103,10 @@ class DataFeeder:
 
             self.normalizer.assert_within_bounds(features_)
 
+            # To tensors
+            features_ = tf.convert_to_tensor(features_, dtype=tf.float32)
+            f0_ = tf.convert_to_tensor(f0_, dtype=tf.float32)
+            phonemes_ = tf.convert_to_tensor(phonemes_, dtype=tf.float32)
+            singers_ = tf.convert_to_tensor(singers_, dtype=tf.float32)
+            
             yield features_, f0_, phonemes_, singers_
