@@ -1,0 +1,24 @@
+name: voxg
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.8
+  - cudatoolkit=11.2
+  - cudnn=8.1.0
+  - numpy
+  - scipy
+  - pandas
+  - matplotlib
+  - notebook
+  - scikit-learn
+  - librosa
+  - cookiecutter
+  - pyyaml
+  - h5py
+  - click
+  - python-dotenv>=0.5.1
+  - pip:
+    - tensorflow>=2.5
+    - pysptk
+    - pyworld

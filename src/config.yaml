@@ -1,9 +1,9 @@
-input_data: '/workspaces/VoxG/data/raw'
-normalization_data: '/workspaces/VoxG/data/normalization'
-processed_data: '/workspaces/VoxG/data/processed' 
-gt_data: '/workspaces/VoxG/data/ground_truth'
-generated_data: '/worskapces/VoxG/data/generated'
-splits: '/workspaces/VoxG/data/splits'
+input_data: ${{ VOXG_INPUT_DATA }}
+normalization_data: ${{ VOXG_NORMALIZATION_DATA }}
+processed_data: ${{ VOXG_PROCESSED_DATA }}
+gt_data: ${{ VOXG_GT_DATA }}
+generated_data: ${{ VOXG_GENERATED_DATA }}
+splits: ${{ VOXG_SPLITS_DATA }}
 
 data:
   split_id: 0
@@ -15,7 +15,7 @@ sampling:
 
 training:
   batch_size: 30
-  per_epoch: 100
+  per_epoch: 600
   per_epoch_valid: 10
   epochs: 950
   critic_inloops: 5

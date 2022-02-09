@@ -10,7 +10,7 @@ class ClipConstraint(Constraint):
 		self.clip_to_value = clip_to_value
  
 	def __call__(self, weights):
-		return tf.clip_by_value(weights, -self.clip_value, self.clip_value)
+		return tf.clip_by_value(weights, -self.clip_to_value, self.clip_to_value)
 
 
 class Critic(Model):
