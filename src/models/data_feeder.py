@@ -35,7 +35,8 @@ class DataFeeder:
         t_files = self.split.train_dataset.listfiles()
         t_rng = np.random.default_rng()  # always random
 
-        train_generator = self._generator(files=t_files, random_generator=t_rng)
+        train_generator = self._generator(files=t_files, random_generator=t_rng, 
+                                          iterations=self.per_epoch)
         for features_, f0_, phonemes_, singers_ in train_generator:
             yield features_, f0_, phonemes_, singers_  # Gen-in-gen
         
@@ -46,20 +47,21 @@ class DataFeeder:
         
         v_rng = np.random.default_rng(seed=49)  # reproducible
 
-        valid_generator = self._generator(files=v_files, random_generator=v_rng)
+        valid_generator = self._generator(files=v_files, random_generator=v_rng,
+                                          iterations=self.per_epoch_valid)
         for features_, f0_, phonemes_, singers_ in valid_generator:
             yield features_, f0_, phonemes_, singers_  # Gen-in-gen
 
-    def _generator(self, files: List, random_generator: np.random.Generator):
+    def _generator(self, files: List, random_generator: np.random.Generator, 
+                   iterations: int):
         # This many files is used in each epoch, samples_per_file frames from each
         num_files = int(self.batch_size / self.blocks_per_file)
 
-        for _ in range(self.per_epoch):
+        for _ in range(iterations):
             features_ = []
             f0_ = []
             singers_ = []
             phonemes_ = []
-
 
             files = np.array(files)
             try:

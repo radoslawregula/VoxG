@@ -90,3 +90,4 @@ target/
 
 # Custom additions to .gitignore 
 .devcontainer/
+models/

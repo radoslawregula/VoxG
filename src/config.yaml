@@ -14,8 +14,9 @@ sampling:
   hop_len: 256
 
 training:
+  model_output_dir: ${{ VOXG_MODEL_OUTPUT_DIR }}
   batch_size: 30
-  per_epoch: 600
+  per_epoch: 102  # 600
   per_epoch_valid: 10
   epochs: 950
   critic_inloops: 5
@@ -32,3 +33,6 @@ training:
   reconstruction_loss_lambda: 0.001
   learning_rate: 0.00005
   dropout: 0.0
+
+  save_every: 2  # 50?
+  validate_every: 2 # 10?
