@@ -5,23 +5,31 @@ from dotenv import find_dotenv, load_dotenv
 
 import click
 
+from src.data.normalizer import Normalizer
+from src.models.data_feeder import DataFeeder
 from src.models.inference import Inference
 from src.utils.config import read_config_section
+
+
+def _prepare_inference_data_feeder(cfg: dict) -> DataFeeder:
+    normalizer = Normalizer(cfg)
+    data_feeder = DataFeeder(cfg, split=None, normalizer=normalizer)
+
+    return data_feeder
 
 
 @click.command()
 @click.option('-c', '--config', type=str)
 @click.option('-f', '--file', type=str)
-@click.option('-skp', '--skip-prediction', is_flag=True)
-def main(config: str, file: str, skip_prediction: bool):
+@click.option('-m', '--model', type=str)
+def main(config: str, file: str, model: str):
     logger = logging.getLogger(__name__)
     logger.info('Running inference...')
-    if skip_prediction:
-        logger.info('Generating ground truth, skipping model prediction.')
 
     cfg = read_config_section(config)
-    infer = Inference(cfg)
-    infer.get(file, skip_prediction)
+    feeder = _prepare_inference_data_feeder(cfg)
+    infer = Inference(cfg, feeder)
+    infer.get(file, model)
 
 
 if __name__ == '__main__':

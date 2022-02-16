@@ -34,5 +34,5 @@ training:
   learning_rate: 0.00005
   dropout: 0.0
 
-  save_every: 2  # 50?
+  save_every: 6  # 50?
   validate_every: 2 # 10?

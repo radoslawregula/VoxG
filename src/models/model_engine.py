@@ -1,6 +1,7 @@
 from datetime import datetime
 import h5py
 import logging
+from math import ceil
 import platform
 import os
 
@@ -80,7 +81,8 @@ class ModelEngine:
         denominator = self.feeder.batch_size * self.feeder.block_len * self.num_features
         numerator = tf.reduce_sum(tf.abs(tf.math.subtract(y_true, y_pred)))
         reconstruction_loss = numerator / denominator
-        critic_loss = tf.reduce_mean(critic_score + DELTA)
+        critic_loss = tf.reduce_mean(critic_score + DELTA)  # Shouldn't that be a whole
+                                                            # critic loss formula?
         
         return critic_loss + self.reconstruction_lambda * reconstruction_loss
     
@@ -245,7 +247,7 @@ class ModelEngine:
             plt.plot(descriptor['x'], descriptor['y'], 
                      color=descriptor['color'])
             plt.xlim([descriptor['x'][0], descriptor['x'][-1]])
-            plt.xticks(descriptor['x'])
+            plt.xticks(descriptor['x'][::ceil(len(descriptor['x']) / 30)])
             plt.grid(True)
             plt.xlabel('Epochs')
             plt.ylabel('Loss value')

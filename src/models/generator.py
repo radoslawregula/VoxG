@@ -51,8 +51,8 @@ class Generator(Model):
     
     def summary(self):
         # For debugging
-        dummy_f0 = Input(shape=(128, 42))
-        dummy_phonemes = Input(shape=(128, 1))
+        dummy_f0 = Input(shape=(128, 1))
+        dummy_phonemes = Input(shape=(128, 42))
         dummy_singers = Input(shape=(12,))
         model = Model(inputs=[dummy_f0, dummy_phonemes, dummy_singers], 
                       outputs=self.call(dummy_f0, dummy_phonemes, dummy_singers))
@@ -97,7 +97,7 @@ class NetworkInput(layers.Layer):
         _singers = _input_call(singers, 'singers')
 
         _singers = tf.tile(
-            tf.reshape(_singers, [self.adjust_batch, 1, -1]),
+            tf.expand_dims(_singers, 1),
             [1, self.adjust_block, 1]
         )
 
@@ -106,9 +106,7 @@ class NetworkInput(layers.Layer):
             to_concat.insert(0, features)
 
         concatenated = tf.concat(to_concat, axis=-1)  # pylint: disable=no-value-for-parameter,unexpected-keyword-arg
-        # Specify shape explicitly to debug with summary() - 192 for generator, 256 for critic
-        concatenated = tf.reshape(concatenated, [self.adjust_batch, 
-                                                 self.adjust_block, 1, -1])
+        concatenated = tf.expand_dims(concatenated, axis=2)
         
         output = self.concatenated_layer(concatenated)
         return output
