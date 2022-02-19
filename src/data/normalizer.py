@@ -42,6 +42,11 @@ class Normalizer:
     def simple_normalize(signal: np.ndarray, s_min: Union[np.ndarray, float], 
                          s_max: Union[np.ndarray, float]) -> np.ndarray:
         return (signal - s_min) / (s_max - s_min)
+    
+    @staticmethod
+    def simple_denormalize(signal: np.ndarray, s_min: Union[np.ndarray, float], 
+                         s_max: Union[np.ndarray, float]) -> np.ndarray:
+        return (signal * (s_max - s_min)) + s_min
 
     @staticmethod
     def imput_f_zero(f_zero: np.ndarray) -> np.ndarray:
@@ -63,6 +68,15 @@ class Normalizer:
         normalized_feats[:, -2] = _f0
 
         return normalized_feats
+    
+    def denormalize(self, features: np.ndarray) -> np.ndarray:
+        # We are not denormalizing F0 because of the imput operation.
+        # Access F0 pre-normalization for that.
+        denormalized_feats = self.simple_denormalize(features,
+                                                     s_min=self.features_min[:-2],
+                                                     s_max=self.features_max[:-2])
+        
+        return denormalized_feats
 
     def calculate_normalization_data(self, max_lower_bound: float = None,
                                      min_higher_bound: float = None):

@@ -31,7 +31,6 @@ class ModelEngine:
         self.epochs = config['epochs']
         self.validate_every = config['validate_every']
         self.critic_inloops = config['critic_inloops']  # Assert >= 1
-        self.num_features = config['num_features']
         self.reconstruction_lambda = config['reconstruction_loss_lambda']
 
         # Optimizers
@@ -78,7 +77,7 @@ class ModelEngine:
     
     def wasserstein_total_loss(self, y_true: tf.Tensor, y_pred: tf.Tensor, 
                                critic_score: tf.Tensor) -> tf.Tensor:
-        denominator = self.feeder.batch_size * self.feeder.block_len * self.num_features
+        denominator = self.feeder.get_average_by()
         numerator = tf.reduce_sum(tf.abs(tf.math.subtract(y_true, y_pred)))
         reconstruction_loss = numerator / denominator
         critic_loss = tf.reduce_mean(critic_score + DELTA)  # Shouldn't that be a whole
@@ -247,7 +246,7 @@ class ModelEngine:
             plt.plot(descriptor['x'], descriptor['y'], 
                      color=descriptor['color'])
             plt.xlim([descriptor['x'][0], descriptor['x'][-1]])
-            plt.xticks(descriptor['x'][::ceil(len(descriptor['x']) / 30)])
+            plt.xticks(descriptor['x'][::ceil(len(descriptor['x']) / 10)])
             plt.grid(True)
             plt.xlabel('Epochs')
             plt.ylabel('Loss value')

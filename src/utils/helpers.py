@@ -18,11 +18,11 @@ def interpolate_inf(vector: np.ndarray) -> Tuple[np.ndarray]:
 
 
 def to_wider_limits(matrix: Tensor) -> Tensor:
-    return (matrix - 0.5) / 2
+    return (matrix - 0.5) * 2
 
 
 def to_narrow_limits(matrix: Tensor) -> Tensor:
-    return (matrix * 2) + 0.5
+    return (matrix / 2) + 0.5
 
 
 def to_singer_index(datapoint: str) -> int:

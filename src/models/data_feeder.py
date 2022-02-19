@@ -25,10 +25,14 @@ class DataFeeder:
         self.per_epoch_valid = cfgt['per_epoch_valid']
         self.blocks_per_file = cfgt['blocks_per_file']
         self.block_len = cfgt['block_len']
+        self.num_features = cfgt['num_features']
 
     @staticmethod
     def _one_hot(vector: np.ndarray, n_classes: int) -> np.ndarray:
         return np.identity(n_classes)[vector]
+    
+    def get_average_by(self) -> int:
+        return self.block_len * self.batch_size * self.num_features
 
     def train_data_generator(self):
         t_files = self.split.train_dataset.listfiles()
@@ -144,6 +148,28 @@ class DataFeeder:
         batches = tf.convert_to_tensor(batches)
 
         return batches, num_blocks
+    
+    def merge_overlapadd(self, features: np.ndarray, num_chunks: int) -> np.ndarray:
+        block_overlap = int(self.block_len / 2)
+        features = features.reshape(-1, self.block_len, self.num_features)
+        window = np.repeat(np.bartlett(self.block_len)[:, np.newaxis], 
+                           self.num_features, axis=1)
+        window_increase, window_decrease = np.split(window, 2, axis=0)
+
+        for idx, block in enumerate(features):
+            if idx == 0:
+                merged = block
+            if idx == num_chunks:
+                break
+            else:
+                merged = np.concatenate([
+                    merged[:(-block_overlap)],
+                    np.add(merged[(-block_overlap):] * window_decrease,
+                           block[:block_overlap] * window_increase),
+                    block[block_overlap:] 
+                ])
+
+        return merged
     
     def feed_input_definition(self) -> Tuple[tf.Tensor, tf.Tensor, tf.Tensor]:
         input_f0 = tf.keras.Input(shape=(self.block_len, 1))

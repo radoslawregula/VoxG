@@ -11,7 +11,7 @@ from src.data.features import Features
 from src.models.data_feeder import DataFeeder
 from src.models.generator import Generator
 from src.utils.constants import IndexableConstants as idc
-from src.utils.helpers import to_singer_index
+from src.utils.helpers import to_singer_index, to_narrow_limits
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ class Inference:
 
         self.processed_path = config['processed_data']
         self.gt_path = config['gt_data']
-        self.generated_data = config['generated_data']
+        self.generated_path = config['generated_data']
     
     def _validate_file(self, file_path: str) -> str:
         if os.path.isfile(file_path):
@@ -45,15 +45,22 @@ class Inference:
         feats_manager = Features()
         
         if model_path is not None:
+            logger.info('Generating ground truth and model prediction...')
             singer_idx = to_singer_index(file_path)
-            signal_mdl = self.run_inference_for_file(features, phonemes,
-                                                     model_path, singer_idx)
+            modeled_features = self.run_inference_for_file(features, phonemes,
+                                                           model_path, singer_idx)
+            signal_mdl = feats_manager.features_to_signal(modeled_features,
+                                                          sampling_rate=self.sampling_rate,
+                                                          frame_period_samples=self.hop_len)
+            self.save_to_wav(signal=signal_mdl,
+                             filepath=self._generate_result_wav_path(file_path))
+            # return # debug
         else:
-            logger.info('Generating ground truth, skipping model prediction.')
+            logger.info('Generating ground truth, skipping model prediction...')
         
         signal_gt = feats_manager.features_to_signal(features,  # 28018x66 -> size to achieve
-                                                sampling_rate=self.sampling_rate,
-                                                frame_period_samples=self.hop_len)
+                                                     sampling_rate=self.sampling_rate,
+                                                     frame_period_samples=self.hop_len)
         # Save ground truth to file
         self.save_to_wav(signal=signal_gt, 
                          filepath=self._generate_ground_truth_wav_path(file_path))
@@ -61,25 +68,39 @@ class Inference:
     def run_inference_for_file(self, f_features: np.ndarray, f_phonemes: np.ndarray, 
                                model_path: str, singer: int) -> np.ndarray:
         n_features = self.feeder.normalizer.normalize(f_features)
-        f0 = n_features[:, -2]
+        n_f0 = n_features[:, -2]
+        f_f0 = f_features[:, -2:]
         
-        batches_f0, num_chunks = self.feeder.generate_batches(f0)
+        batches_f0, num_chunks = self.feeder.generate_batches(n_f0)
         batches_phonemes, _ = self.feeder.generate_batches(f_phonemes, 
                                                            one_hotize=True, 
                                                            depth=idc.N_PHONEMES)
         batches_phonemes = tf.squeeze(batches_phonemes)
         
-        out_features = []
+        out_features_raw = []
         self.load_model(model_path)
 
         for batch_f0, batch_phonemes in zip(batches_f0, batches_phonemes):
             batch_singers = self.feeder.vectorize(singer, depth=idc.N_SINGERS)
             features_this_call = self.model(batch_f0, batch_phonemes, 
                                             batch_singers, training=False)
-            out_features.append(features_this_call)
+            out_features_raw.append(features_this_call.numpy())
 
-        out_features = np.array(out_features)
-        pass
+        out_features_raw = np.array(out_features_raw)
+        out_features_merged = self.feeder.merge_overlapadd(out_features_raw, num_chunks)
+        out_features_merged = to_narrow_limits(out_features_merged)
+        out_features_merged = self.feeder.normalizer.denormalize(out_features_merged)
+        crop_to = min(n_features.shape[0], out_features_merged.shape[0])
+        
+        out_features_merged = out_features_merged[:crop_to]  # That ...
+        
+        out_features = np.concatenate([
+            out_features_merged,
+            f_f0[:crop_to]  # ...or that crop is not necessary: however, 
+                            # we should be prepared for both scenarios
+        ], axis=-1)
+
+        return out_features
     
     def load_model(self, model_path):
         inputs = self.feeder.feed_input_definition()
@@ -95,6 +116,11 @@ class Inference:
         filename = os.path.basename(file_path).replace('processed', 'ground-truth') \
                                               .replace('hdf5', 'wav')
         return os.path.join(self.gt_path, filename)
+    
+    def _generate_result_wav_path(self, file_path: str) -> str:
+        filename = os.path.basename(file_path).replace('processed', 'generated') \
+                                              .replace('hdf5', 'wav')
+        return os.path.join(self.generated_path, filename)
                             
     def save_to_wav(self, signal: np.ndarray, filepath: str):
         try:
