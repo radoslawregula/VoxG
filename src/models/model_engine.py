@@ -259,7 +259,8 @@ class ModelEngine:
             plt.savefig(descriptor['fpath_img'])
 
             # Save raw data for future visualization purposes
-            df = pd.DataFrame({'Epoch': descriptor['x'], 'Loss': descriptor['y']})
+            loss_numpy = [t.numpy() for t in descriptor['y']]
+            df = pd.DataFrame({'Epoch': descriptor['x'], 'Loss': loss_numpy})
             df.to_csv(descriptor['fpath_csv'], index=False)
 
         for dsc in descriptors:
