@@ -6,6 +6,7 @@ import platform
 import os
 
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 from matplotlib import pyplot as plt
 
@@ -42,7 +43,6 @@ class ModelEngine:
         self.save_every = config['save_every']
         self.model_output_dir = config['model_output_dir']
 
-    
     def _setup_training_dir(self) -> str:
         timestamp = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
         host = platform.node()
@@ -155,7 +155,7 @@ class ModelEngine:
                     features_fake = self.generator(f0, phonemes, singers, training=False)
                     score_fake = self.critic(features_fake, f0, phonemes, singers, training=False)
                     score_real = self.critic(to_wider_limits(features_real), f0, 
-                                            phonemes, singers, training=False)
+                                             phonemes, singers, training=False)
 
                     val_c_loss = self.wasserstein_critic_loss(score_real, score_fake)
                     val_g_loss = self.wasserstein_total_loss(features_real, 
@@ -210,7 +210,8 @@ class ModelEngine:
                 'losstype': 'Critic', 
                 'mode': 'training', 
                 'color': 'firebrick',
-                'fpath': os.path.join(training_dir, 'train-critic.png')
+                'fpath_img': os.path.join(training_dir, 'train-critic.png'),
+                'fpath_csv': os.path.join(training_dir, 'train-critic-data.csv')
             },
             {
                 'x': training_x_axis, 
@@ -218,7 +219,8 @@ class ModelEngine:
                 'losstype': 'Final', 
                 'mode': 'training', 
                 'color': 'slateblue',
-                'fpath': os.path.join(training_dir, 'train-final.png')
+                'fpath_img': os.path.join(training_dir, 'train-final.png'),
+                'fpath_csv': os.path.join(training_dir, 'train-final-data.csv')
             },
             {
                 'x': validation_x_axis, 
@@ -226,7 +228,8 @@ class ModelEngine:
                 'losstype': 'Critic', 
                 'mode': 'validation', 
                 'color': 'firebrick',
-                'fpath': os.path.join(training_dir, 'val-critic.png') 
+                'fpath_img': os.path.join(training_dir, 'val-critic.png'),
+                'fpath_csv': os.path.join(training_dir, 'val-critic-data.csv')
             },
             {
                 'x': validation_x_axis, 
@@ -234,7 +237,8 @@ class ModelEngine:
                 'losstype': 'Final', 
                 'mode': 'validation', 
                 'color': 'slateblue',
-                'fpath': os.path.join(training_dir, 'val-final.png')
+                'fpath_img': os.path.join(training_dir, 'val-final.png'),
+                'fpath_csv': os.path.join(training_dir, 'val-final-data.csv')
             }
         ]
 
@@ -252,7 +256,11 @@ class ModelEngine:
             plt.ylabel('Loss value')
             plt.title(f'{descriptor["losstype"]} loss for ' 
                       f'{descriptor["mode"]}: epoch {epoch_number}')
-            plt.savefig(descriptor['fpath'])
+            plt.savefig(descriptor['fpath_img'])
+
+            # Save raw data for future visualization purposes
+            df = pd.DataFrame({'Epoch': descriptor['x'], 'Loss': descriptor['y']})
+            df.to_csv(descriptor['fpath_csv'], index=False)
 
         for dsc in descriptors:
             _draw_single_figure(dsc)

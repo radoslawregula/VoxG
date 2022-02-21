@@ -7,7 +7,7 @@ from tensorflow import Tensor
 from src.utils.constants import IndexableConstants as idc
 
 
-def interpolate_inf(vector: np.ndarray) -> Tuple[np.ndarray]:
+def interpolate_inf(vector: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     inf_mask = np.isinf(vector)
     interpolations = np.interp(inf_mask.nonzero()[0],
                                ((~inf_mask).nonzero()[0]),

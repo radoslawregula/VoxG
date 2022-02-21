@@ -63,7 +63,7 @@ class Features:
         frame_period = (frame_period_samples / sampling_rate) / 10**(-3)   
         f_zero, spectral_env, aperiod = pw.wav2world(signal,
                                                      sampling_rate,
-                                                    #  fft_size=1024,
+                                                     # fft_size=1024,
                                                      frame_period=frame_period)
         spectral_env = librosa.power_to_db(spectral_env, amin=1e-30, top_db=None)
         aperiod = librosa.amplitude_to_db(aperiod, amin=1e-30, top_db=None)
@@ -101,17 +101,18 @@ class Features:
     @staticmethod
     def _read_phoneme_file(txt_file: str) -> pd.DataFrame:
         return pd.read_csv(txt_file, sep=' ', header=None, 
-                        names=['t_start', 't_end', 'phoneme'])
+                           names=['t_start', 't_end', 'phoneme'])
 
     @staticmethod
     def _seconds_to_subframe_idx(sec: float, sr: float, subframe: int) -> int:
         return ceil((sec * sr) / subframe)
-    
-    def _match_phoneme_to_index(self, phoneme: str) -> int:
+
+    @staticmethod
+    def _match_phoneme_to_index(phoneme: str) -> int:
         if phoneme in idc.PHONEMES:
             return idc.PHONEMES.index(phoneme)
         else:
-            raise RuntimeError(f'Phoneme {phoneme} is not mapped in the static ' \
+            raise RuntimeError(f'Phoneme {phoneme} is not mapped in the static '
                                f'mapping structure. Add mapping to proceed.')
     
     # SIL = BR = PAU = no sound!
@@ -178,8 +179,8 @@ class Features:
         diff_feats = _dim(features) - _dim(phonemes)
 
         if not diff_feats == diff_stft:
-            logger.warning(f'Unexpected shape mismatch between STFT and feature'
-                            ' matrix. Will attempt to match anyway...')
+            logger.warning(f'Unexpected shape mismatch between STFT and feature '
+                           f'matrix. Will attempt to match anyway...')
         stft = Features.crop(stft, diff_stft)
         features = Features.crop(features, diff_feats)
         
