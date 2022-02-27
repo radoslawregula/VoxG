@@ -16,7 +16,7 @@ sampling:
 training:
   model_output_dir: ${{ VOXG_MODEL_OUTPUT_DIR }}
   batch_size: 30
-  per_epoch: 102  # 600
+  per_epoch: 100 # 600
   per_epoch_valid: 10
   epochs: 950
   critic_inloops: 5

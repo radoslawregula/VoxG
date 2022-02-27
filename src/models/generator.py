@@ -8,10 +8,12 @@ class Generator(Model):
         self.encoders = []
         self.decoders = []
 
-        filter_nums = [64, 32, 64, 128, 256, 512]
-        resize_nums = [8, 16, 32, 64, 128]
-        filters_encoder = filter_nums[1:]
-        filters_decoder = list(reversed(filter_nums))[1:]
+        filter_nums = [64, 64, 128, 128, 256, 256, 512]
+        resize_nums = [2, 4, 8, 16, 32, 64, 128]
+        # filters_encoder = filter_nums[1:]
+        # filters_decoder = list(reversed(filter_nums))[1:]
+        filters_encoder = filter_nums
+        filters_decoder = filter_nums
 
         activation = config['activation_generator']
         filter_size = (config['filter_length'], 1)

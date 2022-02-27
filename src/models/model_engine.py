@@ -113,10 +113,15 @@ class ModelEngine:
             progbar = tf.keras.utils.Progbar(target=self.feeder.per_epoch)
 
             for idx, (features_real, f0, phonemes, singers) in enumerate(train_generator):
-                _update_generator = self._is_divisible(idx + 1, self.critic_inloops + 1)
-                _update_critic = not _update_generator
+                # _update_generator = self._is_divisible(idx + 1, self.critic_inloops + 1)
+                # _update_critic = not _update_generator
 
-                if _update_critic:
+                # From original WGANSing
+                inloops = self.critic_inloops * 3 if epoch < 26 or epoch % 100 == 0 \
+                          else self.critic_inloops
+
+                # if _update_critic:
+                for _ in range(inloops):
                     with tf.GradientTape() as critic_tape:
                         features_fake = self.generator(f0, phonemes, singers, training=True)
                         score_fake = self.critic(features_fake, f0, phonemes, 
@@ -129,24 +134,24 @@ class ModelEngine:
 
                     critic_loss_per_inloop.update_state(c_loss)
 
-                if _update_generator:
-                    with tf.GradientTape() as gen_tape:
-                        features_fake = self.generator(f0, phonemes, singers, training=True)
-                        score = self.critic(features_fake, f0, phonemes, singers, training=True)
-                        g_loss = self.wasserstein_total_loss(features_real, 
-                                                             to_narrow_limits(features_fake), 
-                                                             score)
-                    g_grads = gen_tape.gradient(g_loss, self.generator.trainable_weights)
-                    self.generator_optimizer.apply_gradients(zip(g_grads, self.generator.trainable_weights))
+                # if _update_generator:
+                with tf.GradientTape() as gen_tape:
+                    features_fake = self.generator(f0, phonemes, singers, training=True)
+                    score = self.critic(features_fake, f0, phonemes, singers, training=True)
+                    g_loss = self.wasserstein_total_loss(features_real, 
+                                                            to_narrow_limits(features_fake), 
+                                                            score)
+                g_grads = gen_tape.gradient(g_loss, self.generator.trainable_weights)
+                self.generator_optimizer.apply_gradients(zip(g_grads, self.generator.trainable_weights))
 
-                    final_loss_per_epoch.update_state(g_loss)
-                    critic_loss_per_epoch.update_state(critic_loss_per_inloop.result())
+                final_loss_per_epoch.update_state(g_loss)
+                critic_loss_per_epoch.update_state(critic_loss_per_inloop.result())
 
-                    progbar.update(current=idx+1, values=[
-                        ('Critic Loss', critic_loss_per_inloop.result()),
-                        ('Final Loss', g_loss.numpy())
-                    ])
-                    critic_loss_per_inloop.reset_state()
+                progbar.update(current=idx+1, values=[
+                    ('Critic Loss', critic_loss_per_inloop.result()),
+                    ('Final Loss', g_loss.numpy())
+                ])
+                critic_loss_per_inloop.reset_state()
             
             valid_progbar = tf.keras.utils.Progbar(target=self.feeder.per_epoch_valid)
 
