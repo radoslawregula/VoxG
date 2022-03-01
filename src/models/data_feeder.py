@@ -159,7 +159,7 @@ class DataFeeder:
         for idx, block in enumerate(features):
             if idx == 0:
                 merged = block
-            if idx == num_chunks:
+            elif idx == num_chunks:
                 break
             else:
                 merged = np.concatenate([
