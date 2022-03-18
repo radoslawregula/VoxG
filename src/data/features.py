@@ -97,6 +97,21 @@ class Features:
                                frame_period=frame_period)
         
         return signal
+    
+    @staticmethod
+    def wav_to_mcep(signal: np.ndarray, sampling_rate: float, 
+                    alpha: float = 0.45, fft_size: int = None, mcep_size: int = 34, 
+                    frame_period_samples: int = 256) -> np.ndarray:
+        # in miliseconds
+        frame_period = (frame_period_samples / sampling_rate) / 10**(-3)
+        _, spectral, _ = pw.wav2world(signal, fs=sampling_rate,
+                                      frame_period=frame_period, fft_size=fft_size)
+
+        # Extract MCEP features
+        mcep = pysptk.sptk.mcep(spectral, order=mcep_size, alpha=alpha, maxiter=0,
+                                etype=1, eps=1.0E-8, min_det=0.0, itype=3)
+        
+        return mcep
 
     @staticmethod
     def _read_phoneme_file(txt_file: str) -> pd.DataFrame:

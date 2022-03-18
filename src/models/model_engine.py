@@ -272,20 +272,3 @@ class ModelEngine:
             _draw_single_figure(dsc)
 
         logger.info(f'Visualizer: saving learning curves to {os.path.basename(training_dir)}.')
-
-        
-
-
-
-
-
-
-                    
-                    
-                
-
-
-
-
-
-        
