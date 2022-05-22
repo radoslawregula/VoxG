@@ -22,14 +22,15 @@ def _prepare_inference_data_feeder(cfg: dict) -> DataFeeder:
 @click.option('-c', '--config', type=str)
 @click.option('-f', '--file', type=str)
 @click.option('-m', '--model', type=str)
-def main(config: str, file: str, model: str):
+@click.option('-v', '--visualize', is_flag=True, default=False)
+def main(config: str, file: str, model: str, visualize: bool):
     logger = logging.getLogger(__name__)
     logger.info('Running inference...')
 
     cfg = read_config_section(config)
     feeder = _prepare_inference_data_feeder(cfg)
     infer = Inference(cfg, feeder)
-    infer.get(file, model)
+    infer.get(file, model, visualize)
 
 
 if __name__ == '__main__':

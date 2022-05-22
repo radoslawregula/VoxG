@@ -4,6 +4,7 @@ processed_data: ${{ VOXG_PROCESSED_DATA }}
 gt_data: ${{ VOXG_GT_DATA }}
 generated_data: ${{ VOXG_GENERATED_DATA }}
 splits: ${{ VOXG_SPLITS_DATA }}
+visualizations: ${{ VOXG_VISUALIZATION_DATA }}
 
 data:
   split_id: 0

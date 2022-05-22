@@ -33,6 +33,7 @@ def main(config: str):
     feeder = _prepare_data_feeder(cfg)
 
     engine = ModelEngine(cfg['training'], feeder)
+    # engine.generator.summary()
     engine.train()
     
 

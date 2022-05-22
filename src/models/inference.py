@@ -12,6 +12,7 @@ from src.models.data_feeder import DataFeeder
 from src.models.generator import Generator
 from src.utils.constants import IndexableConstants as idc
 from src.utils.helpers import to_singer_index, to_narrow_limits
+from src.visualization.visualizer import visualize_features
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,7 @@ class Inference:
         self.processed_path = config['processed_data']
         self.gt_path = config['gt_data']
         self.generated_path = config['generated_data']
+        self.visualizations_path = config['visualizations']
     
     def _validate_file(self, file_path: str) -> str:
         if os.path.isfile(file_path):
@@ -39,7 +41,7 @@ class Inference:
             else:
                 raise FileNotFoundError(f'No HDF5 file at {file_path}.')
     
-    def get(self, file_path: str, model_path: str):
+    def get(self, file_path: str, model_path: str, visualize: bool):
         file_path = self._validate_file(file_path)
         features, phonemes, fourier = DataProcessor.from_hdf5(file_path)
         feats_manager = Features()
@@ -49,6 +51,9 @@ class Inference:
             singer_idx = to_singer_index(file_path)
             modeled_features = self.run_inference_for_file(features, phonemes,
                                                            model_path, singer_idx)
+            if visualize:
+                visualize_features(features, modeled_features, 
+                                   file_path, self.visualizations_path)
             signal_mdl = feats_manager.features_to_signal(modeled_features,
                                                           sampling_rate=self.sampling_rate,
                                                           frame_period_samples=self.hop_len)

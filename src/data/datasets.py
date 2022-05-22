@@ -103,7 +103,7 @@ class DataProcessor:
             phonemes = self.feats.process_phonemes_file(point.txt, 
                                                         sampling_rate=self.sampling_rate, 
                                                         subframe=self.hop_len)
-            fourier,features = self.feats.match_subframes(fourier, 
+            fourier, features = self.feats.match_subframes(fourier, 
                                                           features, 
                                                           phonemes)
             self.to_hdf5(hdf5_fpath, features, phonemes, fourier)
